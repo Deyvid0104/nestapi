@@ -30,6 +30,8 @@
 
 ```bash
 $ npm install
+
+npm i @nestjs/typeorm typeorm mysql2
 ```
 
 ## Compile and run the project
