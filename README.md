@@ -45,7 +45,19 @@ $ npm run start:dev
 
 # production mode
 $ npm run start:prod
+
+# Crear el fichero .env
+# Ejemplo de estructura
+PUERTO=
+DBNAME=
+DBNAME2=
+DB_TAREA=
+URL=
+USUARIO=
+PASSWORD=
+
 ```
+
 
 ## Run tests
 
