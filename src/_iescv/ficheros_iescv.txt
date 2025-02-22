@@ -1,0 +1,1227 @@
+Lista de ficheros en _iescv:
+
+src/_iescv/alumno/
+- alumno.controller.ts
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, NotFoundException } from '@nestjs/common';
+import { AlumnoService } from './alumno.service';
+import { CreateAlumnoDto } from './dto/create-alumno.dto';
+import { UpdateAlumnoDto } from './dto/update-alumno.dto';
+import { Alumno } from './entities/alumno.entity';
+
+@Controller('alumno')
+export class AlumnoController {
+  constructor(private readonly alumnoService: AlumnoService) {}
+
+  @Post()
+  async crear(@Body() crearAlumnoDto: CreateAlumnoDto): Promise<string> {
+    return this.alumnoService.crear(crearAlumnoDto);
+  }
+
+  @Get()
+  async obtenerTodos(): Promise<Alumno[]> {
+    return this.alumnoService.obtenerTodos();
+  }
+
+  @Get(':id')
+  async obtenerUno(@Param('id') id: string): Promise<Alumno> {
+    return this.alumnoService.obtenerUno(+id);
+  }
+
+  @Put(':id')
+  async actualizar(@Param('id') id: string, @Body() actualizarAlumnoDto: UpdateAlumnoDto): Promise<string> {
+    return this.alumnoService.actualizar(+id, actualizarAlumnoDto);
+  }
+
+  @Delete(':id')
+  async eliminar(@Param('id') id: string): Promise<string> {
+    return this.alumnoService.eliminar(+id);
+  }
+
+  // Querys
+
+  @Get('buscar/nombre')
+  async buscarPorNombre(@Query('nombre') nombre: string): Promise<Alumno[]> {
+    return this.alumnoService.buscarPorNombre(nombre);
+    // http://localhost:5000/alumno/buscar/nombre?nombre=[columna - nombre]
+  }
+
+  @Get('buscar/grupo')
+  async buscarPorGrupo(@Query('grupo') grupo: string): Promise<Alumno[]> {
+    return this.alumnoService.buscarPorGrupo(grupo);
+    // http://localhost:5000/alumno/buscar/grupo?grupo=[columna - grupo]
+  }
+
+  @Get('buscar/apellido')
+  async buscarPorApellido(@Query('apellido1') apellido1: string): Promise<Alumno[]> {
+    return this.alumnoService.buscarPorApellido(apellido1);
+    // http://localhost:5000/alumno/buscar/apellido1?apellido1=[columna - apellido]
+  }
+
+  @Get('buscar/nif')
+  async buscarPorNif(@Query('nif') nif: string): Promise<Alumno[]> {
+    return this.alumnoService.buscarPorNif(nif);
+    // http://localhost:5000/alumno/buscar/nif?nif=[columna - nif]
+  }
+
+  @Get('buscar/id')
+  async buscarPorId(@Query('idAlumno') idAlumno: number): Promise<Alumno> {
+    return this.alumnoService.buscarPorId(idAlumno);
+    // http://localhost:5000/alumno/buscar/id?idAlumno=[columna - id]
+  }
+
+}
+- alumno.module.ts
+import { Module } from '@nestjs/common';
+import { AlumnoService } from './alumno.service';
+import { AlumnoController } from './alumno.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Alumno } from './entities/alumno.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Alumno], 'tareaProyecto')],
+  controllers: [AlumnoController],
+  providers: [AlumnoService],
+})
+export class AlumnoModule {}
+
+
+- alumno.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateAlumnoDto } from './dto/create-alumno.dto';
+import { UpdateAlumnoDto } from './dto/update-alumno.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Alumno } from './entities/alumno.entity';
+
+@Injectable()
+export class AlumnoService {
+  constructor(
+    @InjectRepository(Alumno, 'tareaProyecto')
+    private alumnoRepository: Repository<Alumno>,
+  ) {}
+
+  async crear(createAlumnoDto: CreateAlumnoDto): Promise<string> {
+    await this.alumnoRepository.save(createAlumnoDto);
+    return 'Alumno creado';
+  }
+
+  async obtenerTodos(): Promise<Alumno[]> {
+    return this.alumnoRepository.find();
+  }
+
+  async obtenerUno(idAlumno: number): Promise<Alumno> {
+    const alumno = await this.alumnoRepository.findOne({where: { idAlumno }});
+    if (!alumno) {
+      throw new NotFoundException('Alumno no encontrado');
+    }
+    return alumno;
+  }
+
+  async actualizar(idAlumno: number, updateAlumnoDto: UpdateAlumnoDto): Promise<string> {
+    await this.alumnoRepository.update(idAlumno, updateAlumnoDto);
+    return 'Alumno actualizado';
+  }
+
+  async eliminar(idAlumno: number): Promise<string> {
+    await this.alumnoRepository.delete(idAlumno);
+    return 'Alumno eliminado';
+  }
+
+  // Querys
+
+  async buscarPorNombre(nombre: string): Promise<Alumno[]> {
+    return this.alumnoRepository.find({ where: { nombre } });
+  }
+
+  async buscarPorGrupo(grupo: string): Promise<Alumno[]> {
+    return this.alumnoRepository.find({ where: { grupo } });
+  }
+
+  async buscarPorApellido(apellido1: string): Promise<Alumno[]> {
+    return this.alumnoRepository.find({ where: { apellido1 } });
+  }
+
+  async buscarPorNif(nif: string): Promise<Alumno[]> {
+    return this.alumnoRepository.find({ where: { nif } });
+  }
+
+  async buscarPorId(idAlumno: number): Promise<Alumno> {
+    return this.alumnoRepository.findOne({ where: { idAlumno } });
+  }
+}
+
+
+- dto/
+  - create-alumno.dto.ts
+    import { IsNotEmpty, IsString } from 'class-validator';
+
+export class CreateAlumnoDto {
+  @IsNotEmpty()
+  @IsString()
+  nif: string;
+
+  @IsNotEmpty()
+  @IsString()
+  grupo: string;
+
+  @IsNotEmpty()
+  @IsString()
+  nombre: string;
+
+  @IsNotEmpty()
+  @IsString()
+  apellido1: string;
+
+  @IsString()
+  apellido2: string;
+}
+
+
+  - update-alumno.dto.ts
+    import { PartialType } from '@nestjs/mapped-types';
+import { CreateAlumnoDto } from './create-alumno.dto';
+
+export class UpdateAlumnoDto extends PartialType(CreateAlumnoDto) {}
+
+
+- entities/
+  - alumno.entity.ts
+  import { Hace } from 'src/_iescv/hace/entities/hace.entity';
+import { Realiza } from 'src/_iescv/realiza/entities/realiza.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Alumno {
+  @PrimaryGeneratedColumn()
+  idAlumno: number;
+
+  @Column()
+  nif: string;
+
+  @Column()
+  grupo: string;
+
+  @Column()
+  nombre: string;
+
+  @Column()
+  apellido1: string;
+
+  @Column()
+  apellido2: string;
+
+  @OneToMany(() => Realiza, (realiza) => realiza.alumno)
+  alumnoRealizaPractica: Realiza[];
+
+  @OneToMany(() => Hace, (hace) => hace.alumno)
+  alumnoHaceExamen: Hace[];
+}
+
+
+src/_iescv/diseña/
+- diseñar.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { DiseñaService } from './diseña.service';
+import { CreateDiseñaDto } from './dto/create-diseña.dto';
+import { UpdateDiseñaDto } from './dto/update-diseña.dto';
+
+@Controller('diseña')
+export class DiseñaController {
+  // constructor(private readonly diseñaService: DiseñaService) {}
+
+  // @Post()
+  // async crear(@Body() crearDiseñaDto: CreateDiseñaDto): Promise<string> {
+  //   return this.diseñaService.crear(crearDiseñaDto);
+  // }
+
+  // @Get()
+  // async obtenerTodos(): Promise<string> {
+  //   return this.diseñaService.obtenerTodos();
+  // }
+
+  // @Get(':id')
+  // async obtenerUno(@Param('id') id: string): Promise<string> {
+  //   return this.diseñaService.obtenerUno(+id);
+  // }
+
+  // @Put(':id')
+  // async actualizar(@Param('id') id: string, @Body() actualizarDiseñaDto: UpdateDiseñaDto): Promise<string> {
+  //   return this.diseñaService.actualizar(+id, actualizarDiseñaDto);
+  // }
+
+  // @Delete(':id')
+  // async eliminar(@Param('id') id: string): Promise<string> {
+  //   return this.diseñaService.eliminar(+id);
+  // }
+
+  // // Querys
+
+  // @Get('buscar/fecha')
+  // async buscarPorFecha(@Query('fecha') fecha: string): Promise<string> {
+  //   return this.diseñaService.buscarPorFecha(fecha);
+  //   // http://localhost:5000/diseña/buscar/fecha?fecha=[columna - fecha]
+  // }
+}
+
+
+- diseñar.module.ts
+import { Module } from '@nestjs/common';
+import { DiseñaService } from './diseña.service';
+import { DiseñaController } from './diseña.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Diseña } from './entities/diseña.entity';
+import { Practica } from '../practica/entities/practica.entity';
+import { Profesor } from '../profesor/entities/profesor.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Diseña,Practica,Profesor], 'tareaProyecto')],
+  controllers: [DiseñaController],
+  providers: [DiseñaService],
+})
+export class DiseñaModule {}
+
+
+- diseñar.service.ts
+import { Injectable } from '@nestjs/common';
+import { CreateDiseñaDto } from './dto/create-diseña.dto';
+import { UpdateDiseñaDto } from './dto/update-diseña.dto';
+import { Diseña } from './entities/diseña.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+@Injectable()
+export class DiseñaService {
+  // constructor(
+  //   @InjectRepository(Diseña, 'tareaProyecto')
+  //   private diseñaRepository: Repository<Diseña>,
+  // ) {}
+
+  // async crear(createDiseñaDto: CreateDiseñaDto): Promise<string> {
+  //   await this.diseñaRepository.save(createDiseñaDto);
+  //   return 'Practica diseñad con éxito';
+  // }
+
+  // async obtenerTodos(): Promise<Diseña[]> {
+  //   return this.diseñaRepository.find();
+  // }
+
+  // // querys
+
+  // async buscarPorFecha(fecha: string): Promise<Diseña[]> {
+  //   return this.diseñaRepository.find({ where: { fecha } });
+  // }
+}
+
+
+- dto/
+  - create-diseñar.dto.ts
+import { IsDateString, IsNotEmpty, IsNumber, IsPositive } from "class-validator";
+
+export class CreateDiseñaDto {
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    idProfesor: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    idAlumno: number;
+
+    @IsNotEmpty()
+    @IsDateString()
+    fecha: string;
+}
+
+
+  - update-diseñar.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateDiseñaDto } from './create-diseña.dto';
+
+export class UpdateDiseñaDto extends PartialType(CreateDiseñaDto) {}
+
+
+- entities/
+  - diseñar.entity.ts
+  import { Practica } from 'src/_iescv/practica/entities/practica.entity';
+import { Profesor } from 'src/_iescv/profesor/entities/profesor.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Diseña {
+  @PrimaryColumn()
+  idProfesor: number;
+
+  @PrimaryColumn()
+  idPractica: number;
+
+  @Column()
+  fecha: string;
+
+  @ManyToOne(() => Profesor, (profesor) => profesor.profesorDiseñaPracticas)
+  @JoinColumn({ name: 'idProfesor' })
+  profesor: Profesor;
+
+  @ManyToOne(() => Practica, (practica) => practica.profesorDiseñaPracticas)
+  @JoinColumn({ name: 'idPractica' })
+  practica: Practica;
+}
+
+
+src/_iescv/examen/
+- examen.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query } from '@nestjs/common';
+import { ExamenService } from './examen.service';
+import { CreateExamenDto } from './dto/create-examen.dto';
+import { UpdateExamenDto } from './dto/update-examen.dto';
+
+@Controller('examen')
+export class ExamenController {
+  constructor(private readonly examenService: ExamenService) {}
+
+  @Post()
+  async crear(@Body() crearExamenDto: CreateExamenDto): Promise<string> {
+    return this.examenService.crear(crearExamenDto);
+  }
+
+  @Get()
+  async obtenerTodos(): Promise<string> {
+    return this.examenService.obtenerTodos();
+  }
+
+  @Get(':id')
+  async obtenerUno(@Param('id') id: string): Promise<string> {
+    return this.examenService.obtenerUno(+id);
+  }
+
+  @Put(':id')
+  async actualizar(@Param('id') id: string, @Body() actualizarExamenDto: UpdateExamenDto): Promise<string> {
+    return this.examenService.actualizar(+id, actualizarExamenDto);
+  }
+
+  @Delete(':id')
+  async eliminar(@Param('id') id: string): Promise<string> {
+    return this.examenService.eliminar(+id);
+  }
+
+  // Querys
+
+  @Get('buscar/titulo')
+  async buscarPorTitulo(@Query('titulo') titulo: string): Promise<string> {
+    return this.examenService.buscarPorTitulo(titulo);
+    // http://localhost:5000/examen/buscar/titulo?titulo=[columna - titulo]
+  }
+
+  @Get('buscar/numPreguntas')
+  async buscarPorNumPreguntas(@Query('numPreguntas') numPreguntas: string): Promise<string> {
+    return this.examenService.buscarPorNumPreguntas(numPreguntas);
+    // http://localhost:5000/examen/buscar/numPreguntas?numPreguntas=[columna - numPreguntas]
+  }
+
+  @Get('buscar/fecha')
+  async buscarPorFecha(@Query('fecha') fecha: string): Promise<string> {
+    return this.examenService.buscarPorFecha(fecha);
+    // http://localhost:5000/examen/buscar/fecha?fecha=[columna - fecha]
+  }
+}
+
+
+- examen.module.ts
+import { Module } from '@nestjs/common';
+import { ExamenService } from './examen.service';
+import { ExamenController } from './examen.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Examen } from './entities/examen.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Examen], 'tareaProyecto')],
+  controllers: [ExamenController],
+  providers: [ExamenService],
+})
+export class ExamenModule {}
+
+
+- examen.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateExamenDto } from './dto/create-examen.dto';
+import { UpdateExamenDto } from './dto/update-examen.dto';
+import { Examen } from './entities/examen.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+@Injectable()
+export class ExamenService {
+  constructor(
+    @InjectRepository(Examen, 'tareaProyecto')
+    private examenRepository: Repository<Examen>,
+  ) {}
+  
+  async crear(createExamenDto: CreateExamenDto): Promise<string> {
+    await this.examenRepository.save(createExamenDto);
+    return 'Examen creado';
+  }
+
+  async obtenerTodos(): Promise<Examen[]> {
+    return this.examenRepository.find();
+  }
+
+  async obtenerUno(idExamen: number): Promise<Examen> {
+    const examen = await this.examenRepository.findOne({where: { idExamen }});
+    if (!examen) {
+      throw new NotFoundException('Examen no encontrado');
+    }
+    return examen;
+  }
+
+  async actualizar(idExamen: number, updateExamenDto: UpdateExamenDto): Promise<string> {
+    await this.examenRepository.update(idExamen, updateExamenDto);
+    return 'Examen actualizado';
+  }
+
+  async eliminar(idExamen: number): Promise<string> {
+    await this.examenRepository.delete(idExamen);
+    return 'Examen eliminado';
+  }
+
+  // Querys
+
+  async buscarPorTitulo(titulo: string): Promise<Examen[]> {
+    return this.examenRepository.find({ where: { titulo } });
+  }
+
+  async buscarPorFecha(fecha: string): Promise<Examen[]> {
+    return this.examenRepository.find({ where: { fecha } });
+  }
+
+  async buscarPorNunPreguntas(nunPreguntas: number): Promise<Examen[]> {
+    return this.examenRepository.find({ where: { nunPreguntas } });
+  }
+}
+
+
+- dto/
+  - create-examen.dto.ts
+import { IsDateString, IsNotEmpty, IsNumber, IsPositive, IsString } from "class-validator";
+
+export class CreateExamenDto {
+    @IsNotEmpty()
+    @IsString()
+    titulo: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    numPreguntas: number;
+
+    @IsNotEmpty()
+    @IsDateString()
+    fecha: string;
+}
+
+
+  - update-examen.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateExamenDto } from './create-examen.dto';
+
+export class UpdateExamenDto extends PartialType(CreateExamenDto) {}
+
+
+- entities/
+  - examen.entity.ts
+  import { Hace } from 'src/_iescv/hace/entities/hace.entity';
+import { Profesor } from 'src/_iescv/profesor/entities/profesor.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+
+@Entity()
+export class Examen {
+  @PrimaryGeneratedColumn()
+  idExamen: number;
+
+  @Column()
+  titulo: string;
+
+  @Column()
+  numPreguntas: number;
+
+  @Column()
+  fecha: string;
+
+  @OneToMany(() => Hace, (hace) => hace.examen)
+  alumnoHaceExamen: Hace[];
+
+  @ManyToOne(() => Profesor, (profesor) => profesor.examen)
+  profesor: Profesor;
+}
+
+
+src/_iescv/hace/
+- hace.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { HaceService } from './hace.service';
+import { CreateHaceDto } from './dto/create-hace.dto';
+import { UpdateHaceDto } from './dto/update-hace.dto';
+
+@Controller('hace')
+export class HaceController {
+  constructor(private readonly haceService: HaceService) {}
+
+  @Post()
+  create(@Body() createHaceDto: CreateHaceDto) {
+    return this.haceService.create(createHaceDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.haceService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.haceService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateHaceDto: UpdateHaceDto) {
+    return this.haceService.update(+id, updateHaceDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.haceService.remove(+id);
+  }
+}
+
+
+- hace.module.ts
+import { Module } from '@nestjs/common';
+import { HaceService } from './hace.service';
+import { HaceController } from './hace.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Hace } from './entities/hace.entity';
+import { Alumno } from '../alumno/entities/alumno.entity';
+import { Examen } from '../examen/entities/examen.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Hace,Alumno,Examen], 'tareaProyecto')],
+  controllers: [HaceController],
+  providers: [HaceService],
+})
+export class HaceModule {}
+
+
+- hace.service.ts
+import { Injectable } from '@nestjs/common';
+import { CreateHaceDto } from './dto/create-hace.dto';
+import { UpdateHaceDto } from './dto/update-hace.dto';
+
+@Injectable()
+export class HaceService {
+  create(createHaceDto: CreateHaceDto) {
+    return 'This action adds a new hace';
+  }
+
+  findAll() {
+    return `This action returns all hace`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} hace`;
+  }
+
+  update(id: number, updateHaceDto: UpdateHaceDto) {
+    return `This action updates a #${id} hace`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} hace`;
+  }
+}
+
+
+- dto/
+  - create-hace.dto.ts
+import { IsNotEmpty, IsNumber, IsPositive } from "class-validator";
+
+export class CreateHaceDto {
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    idAlumno: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    idExamen: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    nota: number;
+}
+
+
+  - update-hace.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateHaceDto } from './create-hace.dto';
+
+export class UpdateHaceDto extends PartialType(CreateHaceDto) {}
+
+
+- entities/
+  - hace.entity.ts
+import { Examen } from 'src/_iescv/examen/entities/examen.entity';
+import { Alumno } from 'src/_iescv/alumno/entities/alumno.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+
+@Entity()
+export class Hace {
+  @PrimaryColumn()
+  idAlumno: number;
+
+  @PrimaryColumn()
+  idExamen: number;
+
+  @Column()
+  nota: number;
+
+  @ManyToOne(() => Alumno, (alumno) => alumno.alumnoHaceExamen)
+  @JoinColumn({ name: 'idAlumno' })
+  alumno: Alumno;
+
+  @ManyToOne(() => Examen, (examen) => examen.alumnoHaceExamen)
+  @JoinColumn({ name: 'idExamen' })
+  examen: Examen;
+}
+
+
+src/_iescv/practica/
+- practica.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete, Put, Query } from '@nestjs/common';
+import { PracticaService } from './practica.service';
+import { CreatePracticaDto } from './dto/create-practica.dto';
+import { UpdatePracticaDto } from './dto/update-practica.dto';
+
+@Controller('practica')
+export class PracticaController {
+  constructor(private readonly practicaService: PracticaService) {}
+  
+  @Post()
+  async crear(@Body() crearPracticaDto: CreatePracticaDto): Promise<string> {
+    return this.practicaService.crear(crearPracticaDto);
+  }
+
+  @Get()
+  async obtenerTodos(): Promise<string> {
+    return this.practicaService.obtenerTodos();
+  }
+
+  @Get(':id')
+  async obtenerUno(@Param('id') id: string): Promise<string> {
+    return this.practicaService.obtenerUno(+id);
+  }
+
+  @Put(':id')
+  async actualizar(@Param('id') id: string, @Body() actualizarPracticaDto: UpdatePracticaDto): Promise<string> {
+    return this.practicaService.actualizar(+id, actualizarPracticaDto);
+  }
+
+  @Delete(':id')
+  async eliminar(@Param('id') id: string): Promise<string> {
+    return this.practicaService.eliminar(+id);
+  }
+
+  // Querys
+
+  @Get('buscar/titulo')
+  async buscarPorTitulo(@Query('titulo') titulo: string): Promise<string> {
+    return this.practicaService.buscarPorTitulo(titulo);
+    // http://localhost:5000/practica/buscar/titulo?titulo=[columna - titulo]
+  }
+
+  @Get('buscar/dificultad')
+  async buscarPorDificultad(@Query('dificultad') dificultad: string): Promise<string> {
+    return this.practicaService.buscarPorDificultad(dificultad);
+    // http://localhost:5000/practica/buscar/dificultad?dificultad=[columna - dificultad]
+  }
+}
+
+
+- practica.module.ts
+import { Module } from '@nestjs/common';
+import { PracticaService } from './practica.service';
+import { PracticaController } from './practica.controller';
+import { Practica } from './entities/practica.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Practica], 'tareaProyecto')],
+  controllers: [PracticaController],
+  providers: [PracticaService],
+})
+export class PracticaModule {}
+
+
+- practica.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreatePracticaDto } from './dto/create-practica.dto';
+import { UpdatePracticaDto } from './dto/update-practica.dto';
+import { Practica } from './entities/practica.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+@Injectable()
+export class PracticaService {
+  constructor(
+    @InjectRepository(Practica, 'tareaProyecto')
+    private practicaRepository: Repository<Practica>,
+  ) {}
+
+  async crear(createPracticaDto: CreatePracticaDto): Promise<string> {
+    await this.practicaRepository.save(createPracticaDto);
+    return 'Práctica creada';
+  }
+
+  async obtenerTodos(): Promise<Practica[]> {
+    return this.practicaRepository.find();
+  }
+
+  async obtenerUno(idPractica: number): Promise<Practica> {
+    const practica = await this.practicaRepository.findOne({where: { idPractica }});
+    if (!practica) {
+      throw new NotFoundException('Práctica no encontrada');
+    }
+    return practica;
+  }
+
+  async actualizar(idPractica: number, updatePracticaDto: UpdatePracticaDto): Promise<string> {
+    await this.practicaRepository.update(idPractica, updatePracticaDto);
+    return 'Práctica actualizada';
+  }
+
+  async eliminar(idPractica: number): Promise<string> {
+    await this.practicaRepository.delete(idPractica);
+    return 'Práctica eliminada';
+  }
+
+  async buscarPorTitulo(titulo: string): Promise<Practica[]> {
+    return this.practicaRepository.find({ where: { titulo } });
+  }
+
+  async buscarPorDificultad(dificultad: string): Promise<Practica[]> {
+    return this.practicaRepository.find({ where: { dificultad } });
+  }
+}
+
+
+- dto/
+  - create-practica.dto.ts
+import { IsNotEmpty, IsString } from "class-validator";
+
+export class CreatePracticaDto {
+    @IsNotEmpty()
+    @IsString()
+    titulo: string;
+
+    @IsNotEmpty()
+    @IsString()
+    dificultad: string;
+}
+
+
+  - update-practica.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreatePracticaDto } from './create-practica.dto';
+
+export class UpdatePracticaDto extends PartialType(CreatePracticaDto) {}
+
+
+- entities/
+  - practica.entity.ts
+import { Diseña } from 'src/_iescv/diseña/entities/diseña.entity';
+import { Realiza } from 'src/_iescv/realiza/entities/realiza.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Practica {
+  @PrimaryGeneratedColumn()
+  idPractica: number;
+
+  @Column()
+  titulo: string;
+
+  @Column()
+  dificultad: string;
+
+  @OneToMany(() => Diseña, (diseña) => diseña.practica)
+  profesorDiseñaPracticas: Diseña[];
+
+  @OneToMany(() => Realiza, (realiza) => realiza.practica)
+  alumnoRealizaPractica: Realiza[];
+}
+
+
+src/_iescv/profesor/
+- profesor.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  Put,
+} from '@nestjs/common';
+import { ProfesorService } from './profesor.service';
+import { CreateProfesorDto } from './dto/create-profesor.dto';
+import { UpdateProfesorDto } from './dto/update-profesor.dto';
+import { Profesor } from './entities/profesor.entity';
+
+@Controller('profesor')
+export class ProfesorController {
+  constructor(private readonly profesorService: ProfesorService) {}
+
+  @Post()
+  async crear(@Body() crearProfesorDto: CreateProfesorDto): Promise<Profesor> {
+    // Cambiado a Promise<Profesor>
+    return this.profesorService.crear(crearProfesorDto);
+  }
+
+  @Get()
+  async obtenerTodos(): Promise<Profesor[]> {
+    // Cambiado a Promise<Profesor[]> para mayor claridad
+    return this.profesorService.obtenerTodos();
+  }
+
+  @Get(':id')
+  async obtenerUno(@Param('id') id: string): Promise<Profesor> {
+    // Cambiado a Promise<Profesor>
+    return this.profesorService.obtenerUno(+id);
+  }
+
+  @Put(':id')
+  async actualizar(
+    @Param('id') id: string,
+    @Body() actualizarProfesorDto: UpdateProfesorDto,
+  ): Promise<Profesor> {
+    // Cambiado a Promise<Profesor>
+    return this.profesorService.actualizar(+id, actualizarProfesorDto);
+  }
+
+  @Delete(':id')
+  async eliminar(@Param('id') id: string): Promise<string> {
+    return this.profesorService.eliminar(+id);
+  }
+
+  // Querys
+
+  @Get('buscar/nombre')
+  async buscarPorNombre(@Query('nombre') nombre: string): Promise<Profesor[]> {
+    // Cambiado a Promise<Profesor[]>
+    return this.profesorService.buscarPorNombre(nombre);
+  }
+
+  @Get('buscar/apellido')
+  async buscarPorApellido(
+    @Query('apellido') apellido: string,): Promise<Profesor[]> {
+    return this.profesorService.buscarPorApellido(apellido);
+  }
+
+  @Get('buscar/nif')
+  async buscarPorNif(@Query('nif') nif: string): Promise<Profesor[]> {
+    return this.profesorService.buscarPorNif(nif);
+  }
+}
+// http://localhost:5000/profesor/buscar/nif?nif=[columna - nif]
+
+
+- profesor.module.ts
+import { Module } from '@nestjs/common';
+import { ProfesorService } from './profesor.service';
+import { ProfesorController } from './profesor.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Profesor } from './entities/profesor.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Profesor], 'tareaProyecto')],
+  controllers: [ProfesorController],
+  providers: [ProfesorService],
+})
+export class ProfesorModule {}
+
+
+- profesor.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { CreateProfesorDto } from './dto/create-profesor.dto';
+import { UpdateProfesorDto } from './dto/update-profesor.dto';
+import { Profesor } from './entities/profesor.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+
+@Injectable()
+export class ProfesorService {
+  constructor(
+    @InjectRepository(Profesor, 'tareaProyecto')
+    private profesorRepository: Repository<Profesor>,
+  ) {}
+
+  async crear(createProfesorDto: CreateProfesorDto): Promise<string> {
+    await this.profesorRepository.save(createProfesorDto);
+    return 'Profesor creado';
+  }
+
+  async obtenerTodos(): Promise<Profesor[]> {
+    return this.profesorRepository.find();
+  }
+
+  async obtenerUno(idProfesor: number): Promise<Profesor> {
+    const profesor = await this.profesorRepository.findOne({where: { idProfesor }});
+    if (!profesor) {
+      throw new NotFoundException('Profesor no encontrado');
+    }
+    return profesor;
+  }
+
+  async actualizar(idProfesor: number, updateProfesorDto: UpdateProfesorDto): Promise<string> {
+    await this.profesorRepository.update(idProfesor, updateProfesorDto);
+    return 'Profesor actualizado';
+  }
+
+  async eliminar(idProfesor: number): Promise<string> {
+    await this.profesorRepository.delete(idProfesor);
+    return 'Profesor eliminado';
+  }
+
+  // Querys
+
+  async buscarPorNombre(nombre: string): Promise<Profesor[]> {
+    return this.profesorRepository.find({ where: { nombre } });
+  }
+
+  async buscarPorApellido1(apellido1: string): Promise<Profesor[]> {
+    return this.profesorRepository.find({ where: { apellido1 } });
+  }
+
+  async buscarPorNif(nif: string): Promise<Profesor[]> {
+    return this.profesorRepository.find({ where: { nif } });
+  }
+
+
+}
+
+
+- dto/
+  - create-profesor.dto.ts
+import { IsNotEmpty, IsString } from 'class-validator';
+
+export class CreateProfesorDto {
+  @IsNotEmpty()
+  @IsString()
+  nif: string;
+
+  @IsNotEmpty()
+  @IsString()
+  nombre: string;
+
+  @IsNotEmpty()
+  @IsString()
+  apellido1: string;
+
+  @IsString()
+  apellido2: string;
+}
+
+
+  - update-profesor.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateProfesorDto } from './create-profesor.dto';
+
+export class UpdateProfesorDto extends PartialType(CreateProfesorDto) {}
+
+
+- entities/
+  - profesor.entity.ts
+import { Diseña } from 'src/_iescv/diseña/entities/diseña.entity';
+import { Examen } from 'src/_iescv/examen/entities/examen.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
+export class Profesor {
+  @PrimaryGeneratedColumn()
+  idProfesor: number;
+
+  @Column()
+  nif: string;
+
+  @Column()
+  nombre: string;
+
+  @Column()
+  apellido1: string;
+
+  @Column()
+  apellido2: string;
+
+  @OneToMany(() => Diseña, (diseña) => diseña.profesor)
+  profesorDiseñaPracticas: Diseña[];
+
+  @OneToMany(() => Examen, examen => examen.profesor)
+  examen: Examen[];
+}
+
+
+src/_iescv/realiza/
+- realiza.controller.ts
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { RealizaService } from './realiza.service';
+import { CreateRealizaDto } from './dto/create-realiza.dto';
+import { UpdateRealizaDto } from './dto/update-realiza.dto';
+
+@Controller('realiza')
+export class RealizaController {
+  constructor(private readonly realizaService: RealizaService) {}
+
+  @Post()
+  create(@Body() createRealizaDto: CreateRealizaDto) {
+    return this.realizaService.create(createRealizaDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.realizaService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.realizaService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateRealizaDto: UpdateRealizaDto) {
+    return this.realizaService.update(+id, updateRealizaDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.realizaService.remove(+id);
+  }
+}
+
+
+- realiza.module.ts
+import { Module } from '@nestjs/common';
+import { RealizaService } from './realiza.service';
+import { RealizaController } from './realiza.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Realiza } from './entities/realiza.entity';
+import { Practica } from '../practica/entities/practica.entity';
+import { Alumno } from '../alumno/entities/alumno.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([Realiza,Practica,Alumno], 'tareaProyecto')],
+  controllers: [RealizaController],
+  providers: [RealizaService],
+})
+export class RealizaModule {}
+
+
+- realiza.service.ts
+import { Injectable } from '@nestjs/common';
+import { CreateRealizaDto } from './dto/create-realiza.dto';
+import { UpdateRealizaDto } from './dto/update-realiza.dto';
+
+@Injectable()
+export class RealizaService {
+  create(createRealizaDto: CreateRealizaDto) {
+    return 'This action adds a new realiza';
+  }
+
+  findAll() {
+    return `This action returns all realiza`;
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} realiza`;
+  }
+
+  update(id: number, updateRealizaDto: UpdateRealizaDto) {
+    return `This action updates a #${id} realiza`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} realiza`;
+  }
+}
+
+
+- dto/
+  - create-realiza.dto.ts
+import { IsDateString, IsNotEmpty, IsNumber, IsPositive,
+    } from 'class-validator';
+
+export class CreateRealizaDto {
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  idAlumno: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  idPractica: number;
+
+  @IsNotEmpty()
+  @IsDateString()
+  fecha: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  nota: number;
+}
+
+
+  - update-realiza.dto.ts
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateRealizaDto } from './create-realiza.dto';
+
+export class UpdateRealizaDto extends PartialType(CreateRealizaDto) {}
+
+
+- entities/
+  - realiza.entity.ts
+import { Practica } from 'src/_iescv/practica/entities/practica.entity';
+import { Alumno } from 'src/_iescv/alumno/entities/alumno.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+
+@Entity() 
+export class Realiza {
+  @PrimaryColumn()
+  idAlumno: number;
+
+  @PrimaryColumn()
+  idPractica: number;
+
+  @Column()
+  fecha: string;
+
+  @Column()
+  @Column('decimal', { precision: 2, scale: 2 })
+  nota: number;
+
+  @ManyToOne(() => Alumno, (alumno) => alumno.alumnoRealizaPractica)
+  @JoinColumn({ name: 'idAlumno' })
+  alumno: Alumno;
+
+  @ManyToOne(() => Practica, (practica) => practica.alumnoRealizaPractica)
+  @JoinColumn({ name: 'idPractica' })
+  practica: Practica;
+}
+

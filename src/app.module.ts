@@ -2,15 +2,17 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsuarioModule } from './usuario/usuario.module';
-import { AlumnoModule } from './alumno/alumno.module';
 import { BibliotecaModule } from './biblioteca/biblioteca.module';
 import { PokemonModule } from './pokemon/pokemon.module';
 import { CineModule } from './cine/cine.module';
-import { ProveedorModule } from './_recambios/proveedor/proveedor.module';
-import { SuministraModule } from './_recambios/suministra/suministra.module';
-import { PiezaModule } from './_recambios/pieza/pieza.module';
-import { CategoriaModule } from './_recambios/categoria/categoria.module';
 
+import { PracticaModule } from './_iescv/practica/practica.module';
+import { AlumnoModule } from './_iescv/alumno/alumno.module';
+import { ProfesorModule } from './_iescv/profesor/profesor.module';
+import { ExamenModule } from './_iescv/examen/examen.module';
+import { RealizaModule } from './_iescv/realiza/realiza.module';
+import { HaceModule } from './_iescv/hace/hace.module';
+import { DiseñaModule } from './_iescv/diseña/diseña.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -23,7 +25,7 @@ import { CategoriaModule } from './_recambios/categoria/categoria.module';
       password: process.env.PASSWORD,
       database: process.env.DBNAME,
       autoLoadEntities: true,
-      synchronize: true,
+      // synchronize: false,
     }),
     TypeOrmModule.forRoot({
       name: 'base2',
@@ -34,7 +36,7 @@ import { CategoriaModule } from './_recambios/categoria/categoria.module';
       password: process.env.PASSWORD,
       database: process.env.DBNAME2,
       autoLoadEntities: true,
-      synchronize: true,
+      // synchronize: false,
     }),
     TypeOrmModule.forRoot({
       name: 'tarea',
@@ -45,7 +47,9 @@ import { CategoriaModule } from './_recambios/categoria/categoria.module';
       password: process.env.PASSWORD,
       database: process.env.DB_TAREA,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
+
+
     }),
     TypeOrmModule.forRoot({
       name: 'tareaProyecto',
@@ -54,19 +58,21 @@ import { CategoriaModule } from './_recambios/categoria/categoria.module';
       port: 3306,
       username: process.env.USUARIO,
       password: process.env.PASSWORD,
-      database: process.env.DB_TAREA,
+      database: process.env.DB_TAREA2, // Cambiado a DB_TAREA2
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: false,
     }),
     UsuarioModule,
     AlumnoModule,
     BibliotecaModule,
     PokemonModule,
     CineModule,
-    ProveedorModule,
-    SuministraModule,
-    PiezaModule,
-    CategoriaModule,
+    PracticaModule,
+    ProfesorModule,
+    ExamenModule,
+    RealizaModule,
+    HaceModule,
+    DiseñaModule,
   ],
   controllers: [],
   providers: [],
